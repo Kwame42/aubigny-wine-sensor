@@ -1,0 +1,4 @@
+'__WARP10_READ_TOKEN__''read_token' STORE
+
+[ $read_token 'aubigny.rawpressure' {} NOW 30 d ] FETCH
+0 GET

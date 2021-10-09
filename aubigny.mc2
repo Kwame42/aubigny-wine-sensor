@@ -1,0 +1,61 @@
+'Loading MQTT TTN Warpscript' STDOUT
+{
+  'host' '__THING_NETWORK_SERVER__'
+  'port' __THING_NETWORK_PORT__
+  'user' '__THING_NETWORK_USERNAME__'
+  'password' '__THING_NETWORK_PASSWORD__'
+  'clientid' '__THING_NETWORK_CLIENT_ID__'
+  'topics' [
+    '__THING_NETWORK_TOPICS__'
+  ]
+  'timeout' 20000
+  'parallelism' 1
+  'autoack' true
+  LINEON
+  'macro' <%
+    'message' STORE
+    <%
+        <% $message ISNULL ! %>
+	<%
+		$message MQTTPAYLOAD 'ascii' BYTES-> JSON-> 'ttn_message' STORE
+		$ttn_message 'uplink_message' GET 'decoded_payload' GET 'decoded_payload' STORE
+		<% $decoded_payload ISNULL ! %>
+		<%
+			
+                        $decoded_payload 'battery' GET TODOUBLE 'battery' STORE
+                        $decoded_payload 'humidity' GET TODOUBLE 'humidity' STORE
+                        $decoded_payload 'pressure' GET TODOUBLE 'pressure' STORE
+                        $decoded_payload 'temperature' GET TODOUBLE 'temperature' STORE
+			
+			NOW ISO8601 TOTIMESTAMP 'time_stamp' STORE
+			
+			$time_stamp ISO8601 ', ' +
+			$message MQTTTOPIC +
+			', battery=' + $battery TOSTRING +
+			', humidity=' + $humidity TOSTRING +
+			', pressure=' + $pressure TOSTRING +
+			', temperature=' + $temperature TOSTRING +
+			STDOUT
+
+			'__WARPSCRIPT_WRITE_TOKEN__' 'warp10_write_token' STORE
+
+			NEWGTS 'aubigny.rawbattery' RENAME
+			$time_stamp NaN NaN NaN $battery ADDVALUE
+			$warp10_write_token UPDATE
+
+			NEWGTS 'aubigny.rawhumidity' RENAME
+			$time_stamp NaN NaN NaN $humidity ADDVALUE
+			$warp10_write_token UPDATE
+
+			NEWGTS 'aubigny.rawpressure' RENAME
+			$time_stamp NaN NaN NaN $pressure ADDVALUE
+			$warp10_write_token UPDATE
+
+			NEWGTS 'aubigny.rawtemperature' RENAME
+			$time_stamp NaN NaN NaN $temperature ADDVALUE
+			$warp10_write_token UPDATE
+		%> IFT
+	%> IFT
+    %> <% ERROR ->JSON STDOUT %> <% %> TRY
+  %>
+}

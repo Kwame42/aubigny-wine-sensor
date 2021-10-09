@@ -1,0 +1,5 @@
+'__WARP10_READ_TOKEN__''read_token' STORE
+
+[ $read_token 'aubigny.rawbattery' {} NOW -1 ] FETCH
+0 GET
+
